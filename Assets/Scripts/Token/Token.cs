@@ -29,6 +29,9 @@ namespace App
     /// </summary>
     public class Token : MonoBehaviour
     {
+        public int PosX;
+        public int PosZ;
+
         [Serializable]
         public class TeamMats
         {
@@ -56,7 +59,7 @@ namespace App
             get => _TeamType;
             set
             {
-                if(_TeamType != value)
+                if (_TeamType != value)
                 {
                     _TeamType = value;
                     if (_MeshRenderer != null)
@@ -72,22 +75,25 @@ namespace App
         }
         private TeamType _TeamType;
 
+        public TokenType tokenType
+        {
+            get => _TokenType;
+            set => _TokenType = value;
+        }
         [SerializeField]
         private TokenType _TokenType;
-
-        [SerializeField]
-        private bool _isUserable;
-
         [SerializeField]
         private TeamMats _TeamMats;
+
+        //Å@à⁄ìÆâ¬î\
+        public bool IsMove;
 
         [SerializeField]
         private MeshRenderer _MeshRenderer;
 
         void Start()
         {
-            _isUserable = false;
-            if(_MeshRenderer == null)
+            if (_MeshRenderer == null)
             {
                 _MeshRenderer = this.GetComponentInChildren<MeshRenderer>();
             }
@@ -95,37 +101,7 @@ namespace App
 
         void Update()
         {
-            if (_isUserable)
-            {
-                UpdateKeyState();
-            }
-        }
 
-        void UpdateKeyState()
-        {
-            if (Input.GetKeyUp(KeyCode.UpArrow))
-            {
-                transform.position += Vector3.forward;
-                return;
-            }
-
-            if (Input.GetKeyUp(KeyCode.DownArrow))
-            {
-                transform.position += Vector3.back;
-                return;
-            }
-
-            if (Input.GetKeyUp(KeyCode.LeftArrow))
-            {
-                transform.position += Vector3.left;
-                return;
-            }
-
-            if (Input.GetKeyUp(KeyCode.RightArrow))
-            {
-                transform.position += Vector3.right;
-                return;
-            }
         }
     }
 
