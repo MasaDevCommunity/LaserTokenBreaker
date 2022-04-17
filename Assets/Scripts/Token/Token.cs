@@ -17,92 +17,152 @@ namespace App
     }
 
     // チーム
-    public enum TeamType
+    public enum Team
     {
         None = 0,
         Red,
         Blue
     }
 
-    /// <summary>
-    /// Token
-    /// </summary>
-    public class Token : MonoBehaviour
+    public enum TokenDir
     {
-        public int PosX;
-        public int PosZ;
+        Up,         // ↑
+        Left,       // ←
+        Down,       // ↓
+        Right,      // →
+        Max
+    }
 
-        [Serializable]
-        public class TeamMats
+    [Serializable]
+    public class BoardPos
+    {
+        public int x;
+        public int z;
+
+        public BoardPos(int x, int z)
         {
-            public Material RedMat;
-            public Material BlueMat;
-
-            public Material this[TeamType type]
-            {
-                get
-                {
-                    switch (type)
-                    {
-                        case TeamType.Red:
-                            return RedMat;
-                        case TeamType.Blue:
-                            return BlueMat;
-                    }
-                    return null;
-                }
-            }
+            this.x = x;
+            this.z = z;
         }
+    }
 
-        public TeamType teamType
+    
+
+    public abstract class TokenBase : MonoBehaviour
+    {
+        private TokenMatAppler _MatAppler;
+
+        #region プロパティ
+
+        public BoardPos pos
         {
-            get => _TeamType;
+            get => _Pos;
             set
             {
-                if (_TeamType != value)
+                if (_Pos != value)
                 {
-                    _TeamType = value;
-                    if (_MeshRenderer != null)
-                    {
-                        var mat = _TeamMats[teamType];
-                        if (mat != null)
-                        {
-                            _MeshRenderer.material.color = mat.color;
-                        }
-                    }
+                    _Pos = value;
+                    transform.localPosition = new Vector3(_Pos.x, 0, -_Pos.z);
                 }
             }
         }
-        private TeamType _TeamType;
+        private BoardPos _Pos;
+
+        public TokenDir dir
+        {
+            get => _Dir;
+            set
+            {
+                if(_Dir != value)
+                {
+                    _Dir = value;
+                    transform.localRotation = Quaternion.AngleAxis(-90f * (int)_Dir, Vector3.up);
+                }
+            }
+        }
+        private TokenDir _Dir;
+
+        public Team team
+        {
+            get => _Team;
+            private set => _Team = value;
+        }
+        private Team _Team;
 
         public TokenType tokenType
         {
             get => _TokenType;
-            set => _TokenType = value;
+            protected set => _TokenType = value;
         }
-        [SerializeField]
         private TokenType _TokenType;
-        [SerializeField]
-        private TeamMats _TeamMats;
 
-        //　移動可能
-        public bool IsMove;
+        #endregion
 
-        [SerializeField]
-        private MeshRenderer _MeshRenderer;
-
-        void Start()
+        private void Awake()
         {
-            if (_MeshRenderer == null)
-            {
-                _MeshRenderer = this.GetComponentInChildren<MeshRenderer>();
-            }
+            _Pos = new BoardPos(0, 0);
+            _Team = Team.None;
+
+            this.OnAwake();
         }
 
-        void Update()
+        public virtual void OnAwake()
+        {
+            
+        }
+
+        private void Start()
+        {
+            _MatAppler = this.GetComponent<TokenMatAppler>();
+
+            this.OnStart();
+        }
+
+        public virtual void OnStart()
         {
 
+        }
+
+        public virtual bool IsDead(TokenDir laserDir)
+        {
+            return true;
+        }
+
+        public virtual TokenDir Reflect(TokenDir tokenDir)
+        {
+            return tokenDir;
+        }
+
+        public void SetPos(int x, int z)
+        {
+            pos = new BoardPos(x, z);
+        }
+
+        public void SetRot(int dir)
+        {
+            this.dir = (TokenDir)(dir % (int)TokenDir.Max);
+        }
+
+        public void SetTeam(Team team)
+        {
+            this.team = team;
+            _MatAppler?.SetTeamMat();
+        }
+
+        public bool IsSelectable(Team team)
+        {
+            return IsSelectable() && EqualTeam(team);
+        }
+
+        public virtual bool IsSelectable()
+        {
+            return false;
+        }
+
+
+        public bool EqualTeam(Team team)
+        {
+            return this.team == team;
         }
     }
-
 }

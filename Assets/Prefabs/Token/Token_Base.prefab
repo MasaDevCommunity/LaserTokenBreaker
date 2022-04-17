@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4522352121071799985}
-  - component: {fileID: 5690737143924490527}
+  - component: {fileID: 2137317054874176690}
   m_Layer: 0
   m_Name: Token_Base
   m_TagString: Untagged
@@ -32,7 +32,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5690737143924490527
+--- !u!114 &2137317054874176690
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -41,16 +41,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 4522352121071799984}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f13e2ecc1de8d184385261799044ada8, type: 3}
+  m_Script: {fileID: 11500000, guid: d2219ff08c8ef174eb2fdeade266f393, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _TeamType: 0
-  _TokenType: 0
-  _isUserable: 0
-  _TeamMats:
+  mats:
     RedMat: {fileID: 2100000, guid: 491c2325b16b3e246afbd33879b67cca, type: 2}
     BlueMat: {fileID: 2100000, guid: a52ad06f2bed6324eb7ddd42c2b59861, type: 2}
-  _MeshRenderer: {fileID: 5038760113530347406}
+  teamObjects:
+  - {fileID: 4972809771395513531}
 --- !u!1 &4972809771395513531
 GameObject:
   m_ObjectHideFlags: 0
@@ -111,7 +109,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 2100000, guid: ab5382f676f01394e9942f92513f330e, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

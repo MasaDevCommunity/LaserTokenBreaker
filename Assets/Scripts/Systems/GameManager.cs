@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,203 +7,40 @@ using UnityEditor;
 
 namespace App
 {
-    [Serializable]
-    public class TilePos
-    {
-        public int X;
-        public int Z;
-    }
-
     /// <summary>
     /// GameManager
     /// </summary>
     public class GameManager : Common.Singleton<GameManager>
     {
-        // 盤面
-        public const int BoardX = 10;
-        public const int BoardZ = 8;
-
-        /// <summary>
-        /// 0 : None
-        /// 1 : Red
-        /// 2 : Blue
-        /// </summary>
-        private int[,] TileTip = new int[8, 10]
+        public enum GameState
         {
-            {1,2,0,0,0,0,0,0,1,2},
-            {1,0,0,0,0,0,0,0,0,2},
-            {1,0,0,0,0,0,0,0,0,2},
-            {1,0,0,0,0,0,0,0,0,2},
-            {1,0,0,0,0,0,0,0,0,2},
-            {1,0,0,0,0,0,0,0,0,2},
-            {1,0,0,0,0,0,0,0,0,2},
-            {1,2,0,0,0,0,0,0,1,2}
-        };
-
-        /// <summary>
-        /// 赤 Red
-        /// </summary>
-        private readonly int[,,] RedTokenTip = new int[2, 8, 10]
-        {
-            /// <summary>
-            /// チェスの種類
-            /// 0 : None
-            /// 1 : Laser
-            /// 2 : King
-            /// 3 : Deflector
-            /// 4 : Defender
-            /// 5 : Switch
-            /// </summary>
-            {
-                {1,0,0,0,4,2,4,3,0,0},
-                {0,0,3,0,0,0,0,0,0,0},
-                {0,0,0,0,0,0,0,0,0,0},
-                {3,0,0,0,5,5,0,3,0,0},
-                {3,0,0,0,0,0,0,3,0,0},
-                {0,0,0,0,0,0,3,0,0,0},
-                {0,0,0,0,0,0,0,0,0,0},
-                {0,0,0,0,0,0,0,0,0,0}
-            },
-            /// <summary>
-            /// チェスの向き Forward
-            /// 0 : Default(0)
-            /// 1 : 0       ↑
-            /// 2 : 90      ←
-            /// 3 : 180     ↓
-            /// 4 : 270     →
-            /// </summary>
-            {
-                {3,0,0,0,3,1,3,3,0,0},
-                {0,0,2,0,0,0,0,0,0,0},
-                {0,0,0,0,0,0,0,0,0,0},
-                {4,0,0,0,2,3,0,3,0,0},
-                {3,0,0,0,0,0,0,4,0,0},
-                {0,0,0,0,0,0,3,0,0,0},
-                {0,0,0,0,0,0,0,0,0,0},
-                {0,0,0,0,0,0,0,0,0,0}
-            }
-        };
-
-        /// <summary>
-        /// 青 Blue
-        /// </summary>
-        private readonly int[,,] BlueTokenTip = new int[2, 8, 10]
-        {
-            /// <summary>
-            /// チェスの種類
-            /// 0 : None
-            /// 1 : Laser
-            /// 2 : King
-            /// 3 : Deflector
-            /// 4 : Defender
-            /// 5 : Switch
-            /// </summary>
-            {
-                {0,0,0,0,0,0,0,0,0,0},
-                {0,0,0,0,0,0,0,0,0,0},
-                {0,0,0,3,0,0,0,0,0,0},
-                {0,0,3,0,0,0,0,0,0,3},
-                {0,0,3,0,5,5,0,0,0,3},
-                {0,0,0,0,0,0,0,0,0,0},
-                {0,0,0,0,0,0,0,3,0,0},
-                {0,0,3,4,2,4,0,0,0,1}
-            },
-
-            /// <summary>
-            /// チェスの向き Forward
-            /// 0 : Default
-            /// 1 : 0       ↑
-            /// 2 : 90      ←
-            /// 3 : 180     ↓
-            /// 4 : 270     →
-            /// </summary>
-            {
-                {0,0,0,0,0,0,0,0,0,0},
-                {0,0,0,0,0,0,0,0,0,0},
-                {0,0,0,1,0,0,0,0,0,0},
-                {0,0,2,0,0,0,0,0,0,1},
-                {0,0,1,0,3,2,0,0,0,2},
-                {0,0,0,0,0,0,0,0,0,0},
-                {0,0,0,0,0,0,0,4,0,0},
-                {0,0,1,1,1,1,0,0,0,1}
-            }
-        };
-
-        /// <summary>
-        /// マップ情報
-        /// </summary>
-        [Serializable]
-        public class TileInfo
-        {
-            public TeamType teamType = TeamType.None;
-
-            // 配置されているピース
-            public Token token;
+            Start,      // ゲーム開始
+            Idle,       // ゲーム中
+            End         // ゲーム終了
         }
-        private TileInfo[] TileMap;
+        private GameState gameState;
 
-        /// <summary>
-        /// タイルのプレハブ
-        /// </summary>
-        [Serializable]
-        public class TilePrefabs
+        public enum TurnState
         {
-            public GameObject None;
-            public GameObject Red;
-            public GameObject Blue;
+            Start,          // ターン   開始
 
-            public GameObject this[TeamType type]
-            {
-                get
-                {
-                    switch (type)
-                    {
-                        case TeamType.None:
-                            return None;
-                        case TeamType.Red:
-                            return Red;
-                        case TeamType.Blue:
-                            return Blue;
-                    }
-                    return null;
-                }
-            }
+            TokenSelect,    // トークン 選択
+            TokenMove,      // トークン 移動
+            TokenSet,       // トークン 決定
+
+            LaserMove,      // レーザー 移動
+            LaserSet,       // レーザー 決定
+            LaserOn,        // レーザー 発射
+            LaserEnd,       // レーザー 終了
+
+            End,            // ターン   終了
         }
+        private TurnState turnState;
+
         [SerializeField]
-        private TilePrefabs tilePrefabs;
+        private Team turnTeam;
 
-        [Serializable]
-        public class TokenPrefabs
-        {
-            public GameObject Laser;
-            public GameObject King;
-            public GameObject Deflector;
-            public GameObject Defender;
-            public GameObject Switch;
-
-            public GameObject this[TokenType type]
-            {
-                get
-                {
-                    switch (type)
-                    {
-                        case TokenType.Laser:
-                            return Laser;
-                        case TokenType.King:
-                            return King;
-                        case TokenType.Deflector:
-                            return Deflector;
-                        case TokenType.Defender:
-                            return Defender;
-                        case TokenType.Switch:
-                            return Switch;
-                    }
-                    return null;
-                }
-            }
-        }
-        [SerializeField]
-        private TokenPrefabs tokenPrefabs;
+        private BoardMap boardMap;
 
         // カーソル位置
         [SerializeField]
@@ -216,26 +52,324 @@ namespace App
         private int OriginX;
         private int OriginZ;
 
-        private Quaternion OriginRot;
+        private int OriginDir;
 
-        private Token selectedToken;
+        private TokenBase selectedToken;
+        private TokenBase swapToken;
 
         public GameObject cursorObj;
+
+
 
         private void Start()
         {
             CursorX = 0;
             CursorZ = 0;
 
-            MapSet();
+            var generator = this.GetComponent<MapGenerator>();
+            boardMap = generator.Generate();
+            gameState = GameState.Start;
         }
 
-        private bool TokenSelect()
+        private void Update()
+        {
+            switch (gameState)
+            {
+                case GameState.Start:
+                    GameStart();
+                    break;
+                case GameState.Idle:
+                    GameIdle();
+                    break;
+                case GameState.End:
+                    GameEnd();
+                    break;
+                default:
+                    Debug.LogError("予測していない状態");
+                    break;
+            }
+        }
+
+        #region GameState
+
+        private void GameStart()
+        {
+            // 開始チーム
+            turnTeam = (Team)Random.Range(1, 3);
+
+            turnState = TurnState.Start;
+            gameState = GameState.Idle;
+            Debug.Log("---- GameStart ----");
+        }
+
+        private void GameIdle()
+        {
+            switch (turnState)
+            {
+                case TurnState.Start:
+                    TurnStart();
+                    break;
+                case TurnState.TokenSelect:
+                    TurnTokenSelect();
+                    break;
+                case TurnState.TokenMove:
+                    TurnTokenMove();
+                    break;
+                case TurnState.TokenSet:
+                    TurnTokenSet();
+                    break;
+                case TurnState.LaserMove:
+                    TurnLaserMove();
+                    break;
+                case TurnState.LaserSet:
+                    TurnLaserSet();
+                    break;
+                case TurnState.LaserOn:
+                    TurnLaserOn();
+                    break;
+                case TurnState.LaserEnd:
+                    TurnLaserEnd();
+                    break;
+                case TurnState.End:
+                    TurnEnd();
+                    break;
+                default:
+                    Debug.LogError("予測していない状態");
+                    break;
+            }
+        }
+
+        private void GameEnd()
+        {
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                gameState = GameState.Start;
+            }
+        }
+
+        #endregion
+
+
+        private void TurnStart()
+        {
+            turnState = TurnState.TokenSelect;
+
+            var token = boardMap.lasers[turnTeam];
+            CursorX = token.pos.x;
+            CursorZ = token.pos.z;
+            SyncCursor();
+
+            Debug.Log($"--- Turn Start : { turnTeam } ---");
+        }
+
+        private void TurnTokenSelect()
+        {
+            if (TokenSelect(turnTeam))
+            {
+                if (selectedToken != null)
+                {
+                    turnState = TurnState.TokenMove;
+                }
+            }
+            else
+            {
+                Debug.Log("そのトークンは選択できません。");
+            }
+
+            SyncCursor();
+        }
+
+        private void TurnTokenMove()
+        {
+            TokenMove();
+
+            SyncCursor();
+
+            if (turnState != TurnState.TokenMove)
+            {
+                selectedToken = null;
+            }
+        }
+
+        private void TurnTokenSet()
+        {
+            turnState = TurnState.LaserMove;
+
+            var token = boardMap.lasers[turnTeam];
+            CursorX = token.pos.x;
+            CursorZ = token.pos.z;
+
+            SyncCursor();
+        }
+
+        private void TurnLaserMove()
+        {
+            var token = boardMap.lasers[turnTeam];
+            var tokenDir = token.dir;
+
+            // 回転
+            if (Input.GetKeyUp(KeyCode.Q))
+            {
+                tokenDir = (TokenDir)(((int)tokenDir - 1 + (int)TokenDir.Max) % (int)TokenDir.Max);
+            }
+            if (Input.GetKeyUp(KeyCode.E))
+            {
+                tokenDir = (TokenDir)(((int)tokenDir + 1) % ((int)TokenDir.Max));
+            }
+
+            bool outRange = false;
+            switch (tokenDir)
+            {
+                case TokenDir.Up:
+                    outRange = boardMap.IsOutOfBoard(token.pos.x, token.pos.z - 1);
+                    break;
+                case TokenDir.Left:
+                    outRange = boardMap.IsOutOfBoard(token.pos.x - 1, token.pos.z);
+                    break;
+                case TokenDir.Right:
+                    outRange = boardMap.IsOutOfBoard(token.pos.x + 1, token.pos.z);
+                    break;
+                case TokenDir.Down:
+                    outRange = boardMap.IsOutOfBoard(token.pos.x, token.pos.z + 1);
+                    break;
+            }
+
+            if (outRange)
+            {
+                tokenDir = token.dir;
+            }
+
+            token.dir = tokenDir;
+
+            // 決定
+            if (Input.GetKeyUp(KeyCode.Return))
+            {
+                turnState = TurnState.LaserSet;
+            }
+        }
+
+        private void TurnLaserSet()
+        {
+            turnState = TurnState.LaserOn;
+
+            breakToken = null;
+            boardMap.lasers[turnTeam].LaserReset();
+        }
+
+        private TokenBase breakToken = null;
+
+        private void TurnLaserOn()
+        {
+            var laser = boardMap.lasers[turnTeam];
+
+            var laserX = laser.pos.x;
+            var laserZ = laser.pos.z;
+
+            var laserDir = laser.dir;
+            while (true)
+            {
+                switch (laserDir)
+                {
+                    case TokenDir.Up:
+                        laserZ--;
+                        break;
+                    case TokenDir.Left:
+                        laserX--;
+                        break;
+                    case TokenDir.Right:
+                        laserX++;
+                        break;
+                    case TokenDir.Down:
+                        laserZ++;
+                        break;
+                }
+
+                laser.AddPoint(new Vector3(laserX, laser.transform.position.y, -laserZ));
+
+                if (boardMap.IsOutOfBoard(laserX, laserZ))
+                {
+                    break;
+                }
+
+                var tile = boardMap.GetTileInfo(laserX, laserZ);
+                if (tile.token != null)
+                {
+                    // トークンが破壊
+                    if (tile.token.IsDead(laserDir))
+                    {
+                        laser.AddPoint(tile.token.transform.position);
+
+                        breakToken = tile.token;
+                        tile.token = null;
+                        break;
+                    }
+
+                    laserDir = tile.token.Reflect(laserDir);
+                }
+            }
+
+            turnState = TurnState.LaserEnd;
+        }
+
+        private void TurnLaserEnd()
+        {
+            if (Input.GetKeyUp(KeyCode.Return))
+            {
+                var token = breakToken;
+                if (token != null)
+                {
+                    // キングに触れた
+                    if (token.tokenType == TokenType.King)
+                    {
+                        if (token.team != Team.None)
+                        {
+                            // 倒れたキングの逆値
+                            var winner = token.team == Team.Red ? Team.Blue : Team.Red;
+                            Debug.Log($"Winner : { winner }");
+                        }
+                        // ゲーム終了
+                        gameState = GameState.End;
+                        Debug.Log("---- Game End ----");
+                    }
+                    GameObject.Destroy(token.gameObject);
+                }
+
+                boardMap.lasers[turnTeam].LaserReset();
+                turnState = TurnState.End;
+            }
+        }
+
+        private void TurnEnd()
+        {
+            if (turnTeam == Team.Red)
+            {
+                turnTeam = Team.Blue;
+            }
+            else if (turnTeam == Team.Blue)
+            {
+                turnTeam = Team.Red;
+            }
+
+            turnState = TurnState.Start;
+            Debug.Log("--- Turn End ---");
+        }
+
+        private void SyncCursor()
+        {
+            if (cursorObj != null)
+            {
+                cursorObj.transform.position = new Vector3(CursorX, 0, -CursorZ);
+            }
+        }
+
+
+
+        private bool TokenSelect(Team pickTeam)
         {
             // カーソル移動
             if (Input.GetKeyUp(KeyCode.S))
             {
-                CursorZ = Mathf.Min(CursorZ + 1, BoardZ - 1);
+                CursorZ = Mathf.Min(CursorZ + 1, MapTip.MapZ - 1);
             }
             if (Input.GetKeyUp(KeyCode.W))
             {
@@ -243,7 +377,7 @@ namespace App
             }
             if (Input.GetKeyUp(KeyCode.D))
             {
-                CursorX = Mathf.Min(CursorX + 1, BoardX - 1);
+                CursorX = Mathf.Min(CursorX + 1, MapTip.MapX - 1);
             }
             if (Input.GetKeyUp(KeyCode.A))
             {
@@ -254,286 +388,181 @@ namespace App
             if (Input.GetKeyUp(KeyCode.Return))
             {
                 // トークン選択
-                var tile = GetTileInfo(CursorX, CursorZ);
+                var tile = boardMap.GetTileInfo(CursorX, CursorZ);
                 if (tile.token == null)
                     return false;
 
                 // トークン選択 選択判定
-                switch (tile.token.tokenType)
+                if (tile.token.IsSelectable(pickTeam))
                 {
-                    case TokenType.King:
-                        // Keingは選択できない
-                        return false;
-                    default:
-                        break;
+                    // トークン選択
+                    selectedToken = tile.token;
+                    tile.token = null;
+
+                    // リセット用
+                    OriginX = CursorX;
+                    OriginZ = CursorZ;
+                    OriginDir = (int)selectedToken.dir;
+                    MoveRot = 0;
                 }
-
-                // トークン選択 確定
-                selectedToken = tile.token;
-                tile.token = null;
-
-                OriginX = CursorX;
-                OriginZ = CursorZ;
-
-                OriginRot = selectedToken.transform.localRotation;
             }
+
             return true;
         }
 
+        int MoveRot;
+
         private void TokenMove()
         {
-            int oldZ = CursorZ;
-            int oldX = CursorX;
+            if (swapToken)
+            {
+                swapToken.transform.localPosition = new Vector3(swapToken.pos.x, 0, -swapToken.pos.z);
+                swapToken = null;
+            }
 
             var token = selectedToken;
+            if (OriginX == CursorX && OriginZ == CursorZ)
             {
-                if (token.IsMove)
-                {
-                    if (Input.GetKeyUp(KeyCode.S))
-                    {
-                        CursorZ += 1;
-                        if (CursorZ >= BoardZ)
-                        {
-                            CursorZ = BoardZ - 1;
-                        }
-                        if (CursorZ > token.PosZ + 1)
-                        {
-                            CursorZ = token.PosZ + 1;
-                        }
-                    }
-                    if (Input.GetKeyUp(KeyCode.W))
-                    {
-                        CursorZ -= 1;
-                        if (CursorZ < 0)
-                        {
-                            CursorZ = 0;
-                        }
-                        if (CursorZ < token.PosZ - 1)
-                        {
-                            CursorZ = token.PosZ - 1;
-                        }
-                    }
-                    if (Input.GetKeyUp(KeyCode.D))
-                    {
-                        CursorX += 1;
-                        if (CursorX >= BoardX)
-                        {
-                            CursorX = BoardX - 1;
-                        }
-                        if (CursorX > token.PosX + 1)
-                        {
-                            CursorX = token.PosX + 1;
-                        }
-                    }
-                    if (Input.GetKeyUp(KeyCode.A))
-                    {
-                        CursorX -= 1;
-                        if (CursorX < 0)
-                        {
-                            CursorX = 0;
-                        }
-                        if (CursorX < token.PosX - 1)
-                        {
-                            CursorX = token.PosX - 1;
-                        }
-                    }
-                }
-
+                // 回転
                 if (Input.GetKeyUp(KeyCode.Q))
                 {
-                    token.transform.localRotation *= Quaternion.AngleAxis(-90f, Vector3.up);
+                    MoveRot++;
                 }
                 if (Input.GetKeyUp(KeyCode.E))
                 {
-                    token.transform.localRotation *= Quaternion.AngleAxis(90f, Vector3.up);
+                    MoveRot--;
                 }
-            }
 
-            var tile = GetTileInfo(CursorX, CursorZ);
-            // タイル色 制限
-            if (tile.teamType != TeamType.None && tile.teamType != token.teamType)
-            {
-                CursorX = oldX;
-                CursorZ = oldZ;
-            }
-
-            if (tile.token != null)
-            {
-                switch (token.tokenType)
-                {
-                    case TokenType.Switch:
-                        if (tile.token.tokenType == TokenType.Switch)
-                        {
-                            CursorX = oldX;
-                            CursorZ = oldZ;
-                        }
-                        break;
-                    default:
-                        if (tile.token)
-                        {
-                            CursorX = oldX;
-                            CursorZ = oldZ;
-                        }
-                        // チーム制限
-                        if (tile.token.teamType != token.teamType)
-                        {
-                            CursorX = oldX;
-                            CursorZ = oldZ;
-                        }
-                        break;
-                }
-            }
-
-            token.transform.localPosition = new Vector3(CursorX, 0, -CursorZ);
-
-            #region 設置/リセット
-
-            // 設置
-            if (Input.GetKeyUp(KeyCode.Return))
-            {
-                token.PosX = CursorX;
-                token.PosZ = CursorZ;
-
-                if (tile.token == null)
-                {
-                    tile.token = token;
-                }
-                else
-                {
-                    var swapTile = GetTileInfo(OriginX, OriginZ);
-                    swapTile.token = tile.token;
-                    swapTile.token.PosX = OriginX;
-                    swapTile.token.PosZ = OriginZ;
-                    swapTile.token.transform.localPosition = new Vector3(OriginX, 0, -OriginZ);
-
-                    tile.token = token;
-                }
-                selectedToken = null;
-            }
-
-            // リセット
-            if (Input.GetKeyUp(KeyCode.Escape))
-            {
-                token.transform.localPosition = new Vector3(OriginX, 0, -OriginZ);
-                token.PosX = OriginX;
-                token.PosZ = OriginZ;
-                token.transform.localRotation = OriginRot;
-
-                tile = GetTileInfo(OriginX, OriginZ);
-                tile.token = token;
-
-                selectedToken = null;
-            }
-
-            #endregion
-        }
-
-        private void Update()
-        {
-            if (selectedToken == null)
-            {
-                if (!TokenSelect())
-                {
-                    Debug.Log("そのトークンは選択できません。");
-                }
+                MoveRot = Mathf.Clamp(MoveRot, -1, 1);
+                token.SetRot(OriginDir + MoveRot);
             }
             else
             {
-                TokenMove();
+                token.SetRot(OriginDir);
+                MoveRot = 0;
             }
 
-            if (cursorObj != null)
+            if (Input.GetKeyUp(KeyCode.S))
             {
-                cursorObj.transform.position = GetTilePos(CursorX, CursorZ);
+                CursorZ += 1;
+                if (CursorZ >= MapTip.MapZ) CursorZ = MapTip.MapZ - 1;
+                if (CursorZ > OriginZ + 1) CursorZ = OriginZ + 1;
             }
-        }
-
-        private void MapSet()
-        {
-            TileMap = new TileInfo[BoardX * BoardZ];
-            var TileFolder = new GameObject("Tiles");
-            var TokenFolder = new GameObject("Tokens");
-
-            var offset = new Vector3(0, 0, 0);
-
-            for (int iz = 0; iz < BoardZ; ++iz)
+            if (Input.GetKeyUp(KeyCode.W))
             {
-                for (int ix = 0; ix < BoardX; ++ix)
+                CursorZ -= 1;
+                if (CursorZ < 0) CursorZ = 0;
+                if (CursorZ < OriginZ - 1) CursorZ = OriginZ - 1;
+            }
+            if (Input.GetKeyUp(KeyCode.D))
+            {
+                CursorX += 1;
+                if (CursorX >= MapTip.MapX) CursorX = MapTip.MapX - 1;
+                if (CursorX > OriginX + 1) CursorX = OriginX + 1;
+            }
+            if (Input.GetKeyUp(KeyCode.A))
+            {
+                CursorX -= 1;
+                if (CursorX < 0) CursorX = 0;
+                if (CursorX < OriginX - 1) CursorX = OriginX - 1;
+            }
+
+            // カーソル位置のタイル
+            var tile = boardMap.GetTileInfo(CursorX, CursorZ);
+
+            int posX = CursorX;
+            int posZ = CursorZ;
+
+            // カーソル位置のタイルが有効
+            if (tile.teamType != Team.None && tile.teamType != token.team)
+            {
+                posX = OriginX;
+                posZ = OriginZ;
+            }
+
+            // トークンがある
+            if (tile.token != null)
+            {
+                if (token is SwitchToken switcher)
                 {
-                    var pos = offset + new Vector3(ix, 0, -iz);
-                    int angle = 1;
-                    var tile = TileMap[(iz * BoardX) + ix] = new TileInfo();
-
-                    // 陣地
-                    tile.teamType = (TeamType)TileTip[iz, ix];
-
-                    var tileObj = GameObject.Instantiate(tilePrefabs[tile.teamType], TileFolder.transform);
-                    tileObj.transform.localPosition = pos;
-
-                    // Red
+                    if (switcher.CanSwap(tile.token))
                     {
-                        TokenType tokenType = (TokenType)RedTokenTip[0, iz, ix];
-                        if (tokenType != TokenType.None)
-                        {
-                            var gobj = GameObject.Instantiate(tokenPrefabs[tokenType], TokenFolder.transform);
-                            var token = gobj.GetComponent<Token>();
-                            token.teamType = TeamType.Red;
-                            token.tokenType = tokenType;
-                            tile.token = token;
-
-                            angle = RedTokenTip[1, iz, ix];
-                        }
+                        swapToken = tile.token;
                     }
-
-                    // Blue
+                    else
                     {
-                        TokenType tokenType = (TokenType)BlueTokenTip[0, iz, ix];
-                        if (tokenType != TokenType.None)
-                        {
-                            var gobj = GameObject.Instantiate(tokenPrefabs[tokenType], TokenFolder.transform);
-                            var token = gobj.GetComponent<Token>();
-                            token.teamType = TeamType.Blue;
-                            token.tokenType = tokenType;
-                            tile.token = token;
-
-                            angle = BlueTokenTip[1, iz, ix];
-                        }
-                    }
-
-                    // Transform設定
-                    if (tile.token != null)
-                    {
-                        tile.token.PosX = ix;
-                        tile.token.PosZ = iz;
-
-                        tile.token.transform.localPosition = pos;
-
-                        angle = Mathf.Clamp(angle - 1, 0, 4);
-                        tile.token.transform.localRotation = Quaternion.AngleAxis(-90f * angle, Vector3.up);
-
-                        if (tile.token.tokenType == TokenType.Laser)
-                        {
-                            tile.token.IsMove = false;
-                        }
-                        else
-                        {
-                            tile.token.IsMove = true;
-                        }
+                        posX = OriginX;
+                        posZ = OriginZ;
+                        swapToken = null;
                     }
                 }
+                else
+                {
+                    posX = OriginX;
+                    posZ = OriginZ;
+                }
             }
-        }
 
-        public TileInfo GetTileInfo(int x, int z)
-        {
-            x = Mathf.Clamp(x, 0, BoardX);
-            z = Mathf.Clamp(z, 0, BoardZ);
-            return TileMap[z * BoardX + x];
-        }
+            // Preview
+            {
+                if (swapToken)
+                {
+                    swapToken.transform.localPosition = new Vector3(OriginX, 0, -OriginZ);
+                }
 
-        public Vector3 GetTilePos(int x, int z)
-        {
-            return new Vector3(x, 0, -z);
+                token.transform.localPosition = new Vector3(posX, 0, -posZ);
+            }
+
+            bool reset = false;
+            // 設置
+            if (Input.GetKeyUp(KeyCode.Return))
+            {
+                swapToken = null;
+                // 同じ位置の場合リセット扱い
+                if (OriginX == posX && OriginZ == posZ && MoveRot == 0)
+                {
+                    reset = true;
+                }
+                else
+                {
+                    token.SetPos(posX, posZ);
+                    token.SetRot(OriginDir + MoveRot);
+
+                    if (tile.token == null)
+                    {
+                        tile.token = token;
+                    }
+                    else
+                    {
+                        var swapTile = boardMap.GetTileInfo(OriginX, OriginZ);
+                        swapTile.token = tile.token;
+                        swapTile.token.SetPos(OriginX, OriginZ);
+
+                        tile.token = token;
+                    }
+                    MoveRot = 0;
+                    turnState = TurnState.TokenSet;
+                }
+            }
+
+            // リセット
+            if (reset || Input.GetKeyUp(KeyCode.Escape) || Input.GetKeyUp(KeyCode.R))
+            {
+                if (swapToken)
+                {
+                    swapToken.transform.localPosition = new Vector3(swapToken.pos.x, 0, -swapToken.pos.z);
+                }
+                swapToken = null;
+
+                token.SetPos(OriginX, OriginZ);
+                token.SetRot(OriginDir);
+
+                tile = boardMap.GetTileInfo(OriginX, OriginZ);
+                tile.token = token;
+
+                turnState = TurnState.TokenSelect;
+            }
+
         }
 
 #if UNITY_EDITOR

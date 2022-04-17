@@ -418,8 +418,8 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 12.62, z: -0}
+  m_LocalRotation: {x: -0.41623804, y: 0.0019801098, z: -0.0008841592, w: -0.9092531}
+  m_LocalPosition: {x: 4.5397754, y: 5.951994, z: -9.030209}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -435,6 +435,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1982850712}
   - component: {fileID: 1982850713}
+  - component: {fileID: 1982850714}
   m_Layer: 0
   m_Name: System
   m_TagString: Untagged
@@ -468,6 +469,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 314982cfcec4a024fa742cc0601b42e9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  CursorX: 0
+  CursorZ: 0
+  cursorObj: {fileID: 99253363}
+--- !u!114 &1982850714
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1982850711}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b15b47167a584d6499b487c27f8b7825, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
   tilePrefabs:
     None: {fileID: 4732382927101844153, guid: 65847782ea6cdeb4aae252506ba9cd48, type: 3}
     Red: {fileID: 7217058729771027647, guid: fab556a514842e1439082d847388aabf, type: 3}
@@ -478,6 +494,3 @@ MonoBehaviour:
     Deflector: {fileID: 8191003150773562995, guid: ac6c8c14b458df14e876392d86a76672, type: 3}
     Defender: {fileID: 6800481517665943416, guid: e6cb5f7702179ee4595ca86a32551b8e, type: 3}
     Switch: {fileID: 1551720096027349359, guid: 0f1f4534085da0242bafdf36d7744545, type: 3}
-  CursorX: 0
-  CursorZ: 0
-  cursorObj: {fileID: 99253363}
